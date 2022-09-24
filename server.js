@@ -4,14 +4,15 @@
 
 const { NodeGateway } = require('./node-gateway');
 const { ApolloServer } = require('apollo-server');
+const { IntrospectAndCompose } = require('@apollo/gateway')
 const { server: serverProduct } = require('./server-product');
 const { server: serverReview } = require('./server-review');
 
-const BASE_PORT = 7000;
+const BASE_PORT = 8009;
 
 const SERVERS = [
-  { name: '📦 product', server: serverProduct },
-  { name: '🆒 review', server: serverReview },
+  { name: 'product', server: serverProduct },
+  { name: 'review', server: serverReview },
 ];
 
 async function startServers() {
@@ -27,8 +28,14 @@ async function startServers() {
 }
 
 async function main() {
-  const serviceList = await startServers();
-  const gateway = new NodeGateway({ serviceList, serviceHealthCheck: true });
+  const subgraphs = await startServers();
+
+  const gateway = new NodeGateway({ 
+    supergraphSdl: new IntrospectAndCompose({
+    subgraphs
+    })
+  });
+
   const server = new ApolloServer({ gateway, subscriptions: false });
   const info = await server.listen(BASE_PORT);
 

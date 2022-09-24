@@ -3,7 +3,7 @@
  */
 
 const { ApolloServer, gql } = require('apollo-server');
-const { buildFederatedSchema } = require('@apollo/federation');
+const { buildSubgraphSchema } = require('@apollo/subgraph');
 const { toRecords } = require('./util');
 const GraphQLNode = require('./graphql-node');
 const { connectionFromArray } = require('graphql-relay');
@@ -35,7 +35,6 @@ const REVIEWS_MAP = toRecords(REVIEWS);
 
 const typeDefs = gql`
   type Query {
-    node(id: ID!): Node
     review(id: ID!): Review
     reviews(ids: [ID!]): [Review]
   }
@@ -115,5 +114,5 @@ const resolvers = {
 };
 
 exports.server = new ApolloServer({
-  schema: buildFederatedSchema([{ typeDefs, resolvers }, GraphQLNode]),
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }, GraphQLNode]),
 });
