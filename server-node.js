@@ -27,9 +27,9 @@ const typeDefs = gql`
 
 const resolvers = {
   Node: {
-    __resolveType({ id }) {
-      console.log('__resolveType :::::::::::::::::::::::::::::::::::::::: ${id} ');
-      const [typename] = fromId(id);
+    __resolveType(value) {
+      console.log('__resolveType :::::::::::::::::::::::::::::::::::::::: ${value} ');
+      const [typename] = fromId(value.id);
       return typename;
     },
   },
@@ -47,7 +47,7 @@ const resolvers = {
 
 exports.server = new ApolloServer({
   debug: true,
-  schema: buildSubgraphSchema(typeDefs, resolvers),
+  schema: buildSubgraphSchema({typeDefs, resolvers}),
   plugins: [
     {
       async requestDidStart(initialRequestContext) {
@@ -77,6 +77,8 @@ exports.server = new ApolloServer({
     }
   ],
 });
+
+const DIVIDER_TOKEN = ':';
 
 /**
  * Decodes a Base64 encoded global ID into typename and key

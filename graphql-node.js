@@ -3,10 +3,6 @@ const { gql } = require('apollo-server');
 const DIVIDER_TOKEN = ':';
 
 exports.typeDefs = gql`
-  """
-  An object with an ID.
-  Follows the [Relay Global Object Identification Specification](https://relay.dev/graphql/objectidentification.htm)
-  """
   interface Node {
     id: ID!
   }

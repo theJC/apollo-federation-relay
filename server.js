@@ -71,7 +71,7 @@ async function main() {
   });
   const info = await server.listen(BASE_PORT);
 
-  console.log(`\n--\n\n🌍 gateway up at ${info.url}graphql`);
+  console.log(`\n--\n\n🌍 gateway up at ${info.url}graphql\n\n\n\n`);
 }
 
 main().catch((err) => {
