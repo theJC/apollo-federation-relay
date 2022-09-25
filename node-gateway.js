@@ -28,7 +28,7 @@ class RootModule {
     this.resolvers = {
       Query: {
         node(_, { id }) {
-          const [typename] = GraphQLNode.fromId(id);
+          const [typename] = fromId(id);
           if (!nodeTypes.has(typename)) {
             throw new Error(`Invalid node ID "${id}"`);
           }

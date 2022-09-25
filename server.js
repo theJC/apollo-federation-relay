@@ -2,17 +2,18 @@
  * Gateway server and main entrypoint
  */
 
-const { NodeGateway } = require('./node-gateway');
 const { ApolloServer } = require('apollo-server');
-const { IntrospectAndCompose } = require('@apollo/gateway')
-const { server: serverProduct } = require('./server-product');
-const { server: serverReview } = require('./server-review');
+const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway')
+const { server: productServer } = require('./server-product');
+const { server: reviewServer } = require('./server-review');
+const { server: nodeServer } = require('./server-node');
 
 const BASE_PORT = 8009;
 
 const SERVERS = [
-  { name: 'product', server: serverProduct },
-  { name: 'review', server: serverReview },
+  { name: 'product', server: productServer },
+  { name: 'review', server: reviewServer },
+  { name: 'node', server: nodeServer },
 ];
 
 async function startServers() {
@@ -30,19 +31,50 @@ async function startServers() {
 async function main() {
   const subgraphs = await startServers();
 
-  const gateway = new NodeGateway({ 
+  const gateway = new ApolloGateway({
     supergraphSdl: new IntrospectAndCompose({
-    subgraphs
-    })
+      subgraphs,
+    }),
   });
 
-  const server = new ApolloServer({ gateway, subscriptions: false });
+  const server = new ApolloServer({
+    gateway,
+    subscriptions: false,
+    plugins: [
+      {
+        async requestDidStart(initialRequestContext) {
+          return {
+            async executionDidStart(executionRequestContext) {
+              return {
+                willResolveField({ source, args, context, info }) {
+                  const start = process.hrtime.bigint();
+                  return (error, result) => {
+                    const end = process.hrtime.bigint();
+                    console.log(
+                      `Field ${info.parentType.name}.${info.fieldName} took ${
+                        end - start
+                      }ns`,
+                    );
+                    if (error) {
+                      console.log(`Field ${info.parentType.name}.${info.fieldName} failed with ${error}`);
+                    } else {
+                      console.log(`Field ${info.parentType.name}.${info.fieldName} returned ${result}`);
+                    }
+                  };
+                },
+              };
+            },
+          };
+        },
+      },
+    ],
+  });
   const info = await server.listen(BASE_PORT);
 
   console.log(`\n--\n\n🌍 gateway up at ${info.url}graphql`);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

@@ -31,7 +31,6 @@ const PRODUCTS_MAP = toRecords(PRODUCTS);
 
 const typeDefs = gql`
   type Query {
-    node(id: ID!): Node
     product(id: ID!): Product
     products(ids: [ID!]): [Product]
   }
@@ -70,7 +69,7 @@ const nodeTypes = new Set(['Product']);
 const resolvers = {
   Query: {
     node(_, { id }) {
-      const [typename] = GraphQLNode.fromId(id);
+      const [typename] = fromId(id);
       if (!nodeTypes.has(typename)) {
         throw new Error(`Invalid node ID "${id}"`);
       }
@@ -105,4 +104,32 @@ const resolvers = {
 
 exports.server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }, GraphQLNode]),
+  plugins: [
+    {
+      async requestDidStart(initialRequestContext) {
+        return {
+          async executionDidStart(executionRequestContext) {
+            return {
+              willResolveField({ source, args, context, info }) {
+                const start = process.hrtime.bigint();
+                return (error, result) => {
+                  const end = process.hrtime.bigint();
+                  console.log(
+                    `Product Field ${info.parentType.name}.${info.fieldName} took ${
+                      end - start
+                    }ns`,
+                  );
+                  if (error) {
+                    console.log(`Product Field ${info.parentType.name}.${info.fieldName} with ${error}`);
+                  } else {
+                    console.log(`Product Field ${info.parentType.name}.${info.fieldName} returned ${JSON.stringify(result)}`);
+                  }
+                };
+              },
+            };
+          },
+        };
+      },
+    },
+  ],
 });

@@ -79,7 +79,7 @@ const nodeTypes = new Set(['Review']);
 const resolvers = {
   Query: {
     node(_, { id }) {
-      const [typename] = GraphQLNode.fromId(id);
+      const [typename] = fromId(id);
       if (!nodeTypes.has(typename)) {
         throw new Error(`Invalid node ID "${id}"`);
       }
@@ -115,4 +115,30 @@ const resolvers = {
 
 exports.server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }, GraphQLNode]),
+  plugins: [
+    {
+      async requestDidStart(initialRequestContext) {
+        return {
+          async executionDidStart(executionRequestContext) {
+            return {
+              willResolveField({ source, args, context, info }) {
+                const start = process.hrtime.bigint();
+                return (error, result) => {
+                  const end = process.hrtime.bigint();
+                  console.log(
+                    `Reviews Field ${info.parentType.name}.${info.fieldName} took ${end - start}ns`,
+                  );
+                  if (error) {
+                    console.log(`Review Field ${info.parentType.name}.${info.fieldName} failed with ${error}`);
+                  } else {
+                    console.log(`Reviews Field ${info.parentType.name}.${info.fieldName} returned ${JSON.stringify(result)}\n\n`);
+                  }
+                };
+              },
+            };
+          },
+        };
+      },
+    },
+  ],
 });
