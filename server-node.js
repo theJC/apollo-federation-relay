@@ -28,8 +28,9 @@ const typeDefs = gql`
 const resolvers = {
   Node: {
     __resolveType(value) {
-      console.log('__resolveType :::::::::::::::::::::::::::::::::::::::: ${value} ');
+      console.log(`__resolveType :::::::::::::::::::::::::::::::::::::::: ${JSON.stringify(value)} `);
       const [typename] = fromId(value.id);
+      console.log(`__resolveType :::::::::::::::::::::::::::::::::::::::: ${JSON.stringify(value)} `);
       return typename;
     },
   },
@@ -39,7 +40,7 @@ const resolvers = {
       // if (!nodeTypes.has(typename)) {
       //   throw new Error(`Invalid node ID "${id}"`);
       // }
-      console.log('node :::::::::::::::::::::::::::::::::::::::: ${id} ');
+      console.log(`node :::::::::::::::::::::::::::::::::::::::: id: ${id} `);
       return { id };
     },
   },
